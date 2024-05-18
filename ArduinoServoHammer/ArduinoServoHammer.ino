@@ -1,11 +1,12 @@
 #include <Servo.h>
 
-String myCmd;
-Servo myservo;  // create servo object to control a servo
-int startpos = 1;
-int endpos = 100;
-int pos = startpos;    // variable to store the servo position
-int format = 1;
+String myCmd;                            // command string object
+Servo myservo;                           // create servo object to control a servo
+int startpos = 10;                       // starting position of hammer in degrees
+int endpos = 100;                        // ending position of hammer in degrees
+int pos = startpos;                      // variable to store the servo position
+int decimal_points_on_floatread = 1;     // amount of decimal points we should send when sending a float on serial line
+bool blink_for_move_confirmation = true; // whether to blink for confirmation a command has been sent to the arduino
 
 /**
  * blink amt_of_blinks times
@@ -25,18 +26,9 @@ void blink(int amt_of_blinks)
 */
 void hammerfall()
 {
-  for (pos = endpos; pos >= startpos; pos -= 2) { //mf
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(10);                       // waits 15 ms for the servo to reach the position
-  }
-  delay(1000);  // 1 sec wait
-
-  for (pos = startpos; pos <= endpos; pos += 1) { // goes from 0 degrees to 180 degrees
-  // in steps of 1 degree
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(10);  
-   }
-  delay(1000);
+  myservo.write(startpos); // move hammer to start position
+  delay(1000);             // 1 sec wait
+  myservo.write(endpos);   // move hammer to end position
 }
 
 /**
@@ -45,27 +37,25 @@ void hammerfall()
 void setup() {
   myservo.attach(9);               // attaches the servo on pin 9 to the servo object
   Serial.begin(9600);              // Listens on com-port
-  Serial.setTimeout(10); 
+  Serial.setTimeout(10);           // listen for 10ms when reading String. If no timeout is set, the readstring will wait indefinitely for a command.
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);  // Turns the test LED off initially.
-  blink(5);                        // let us know it's set up
-  myservo.write(endpos);
-  hammerfall();
+  blink(5);                        // let us know the board is set up by blinking 5 times
+  myservo.write(startpos);         // move hammer to starting position
 }
 
 /**
  * check for incoming values on the usb
- * if values available < 0, then smash player
+ * if values(=move accuracy rating) available < 0, then smash player
 */
 void loop() {
-  if (Serial.available() > 0) { //Check values of Comport serial
-    myCmd = Serial.readString();
-    float arduinoValue = myCmd.toFloat();
-    Serial.println(arduinoValue, format); // send back confirmation over usb
+  if (Serial.available() > 0) {           // Check for available values on serial line
+    myCmd = Serial.readString();          // grab the command string
+    float arduinoValue = myCmd.toFloat(); // read the command as being a float (it's the move accuracy)
+    Serial.println(arduinoValue, decimal_points_on_floatread); // send back confirmation over usb
     Serial.flush();
-
-    if(arduinoValue < 0) { // negative rating on move
-      blink(2); // blink twice
+    if (blink_for_move_confirmation) blink(2); // blink twice;
+    if(arduinoValue < 0) {                // negative rating on move = get whacked
       hammerfall();
     } 
   }
