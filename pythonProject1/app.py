@@ -46,7 +46,7 @@ def changeValueToState(value) :
     elif value <= -12:
         hitIndex = 5    # hit 5
 
-    SendValueToArduino(hitIndex)
+    sendValueToArduino(hitIndex)
 
 def timeCounter(seconds):
     starttime = time.time()
@@ -56,7 +56,7 @@ def timeCounter(seconds):
             break
         yield now - starttime
 
-    for t in time_counter(20):
+    for t in timeCounter(20):
         kb()
         time.sleep(.001)
 
@@ -66,10 +66,10 @@ def seeIfMoveWasMade():
     preString = 'data-whole-move-number='
     preStringLength = len(preString)
 
-    amountOfIndexes = Find_All(html, preString) #finds instances
+    amountOfIndexes = findAll(html, preString) #finds instances
     if oldAmountOfMoves < amountOfIndexes:
         time.sleep(1)
-        ReceiveAndPrintValue()
+        receiveAndPrintValue()
         oldAmountOfMoves = amountOfIndexes
 
 def findAll(a_str, sub):
@@ -103,13 +103,13 @@ def receiveAndPrintValue() :
                 #print(answerStringPos + " Is Pos")
                 #print("Triggered 1")
                 answerStringNeg = "0"
-                PrintFinalValue(answerStringPos, answerStringNeg)
+                printFinalValue(answerStringPos, answerStringNeg)
                 break
             elif htmlString[i].isalpha():
                 #print(answerStringPos + " Is Pos")
                 #print("Triggered 2")
                 answerStringNeg = "0"
-                PrintFinalValue(answerStringPos, answerStringNeg)
+                printFinalValue(answerStringPos, answerStringNeg)
                 break
             # print(htmlString[i])
         answerStringNeg = "0" #resets neg (might be not needed.
@@ -130,14 +130,14 @@ def receiveAndPrintValue() :
                 #print(answerStringNeg+ " Is Neg val")
                 #print("Triggered 3")
                 answerStringPos = "0"
-                PrintFinalValue(answerStringPos, answerStringNeg)
+                printFinalValue(answerStringPos, answerStringNeg)
                 break
             elif htmlString[i].isalpha():
                 #print(answerStringNeg+ " Is Neg val")
                 #print("Triggered 4")
                 #print(stringIndexNeg)
                 answerStringPos = "0"
-                PrintFinalValue( answerStringPos, answerStringNeg)
+                printFinalValue( answerStringPos, answerStringNeg)
                 break
         answerStringPos = "0" #resets pos
         #End Negative Reading of value
@@ -145,7 +145,7 @@ def receiveAndPrintValue() :
 def arduinoTestInput() :
     global fakeValue
     print("Testing Arduino with fake input")
-    SendValueToArduino(fakeValue)
+    sendValueToArduino(fakeValue)
     fakeValue += 1
 
 def sleepAndReset():
@@ -169,24 +169,24 @@ def printFinalValue(posScore, negScore):
                 print("Final Answer Below")
                 str(FinalAnswer)
                 #ChangeValueToState(FinalAnswer)
-                SendValueToArduino(FinalAnswer)
+                sendValueToArduino(FinalAnswer)
         oldFinalAnswer = FinalAnswer # stores old final answer
     except Exception as error:
         print("Empty Final Answer recorded")
 
 def checkInput():
     if keyboard.is_pressed("q"):
-        ArduinoTestInput()
+        arduinoTestInput()
         time.sleep(.5)
     if keyboard.is_pressed("p"): #Starts Reading out the values and sending it away.
-            ReceiveAndPrintValue()
-            time.sleep(.5)
-            for t in time_counter(1200):
-                SeeIfMoveWasMade()
-                print("Seen if movewasmade, sleep 2 secs.")
-                if keyboard.is_pressed("p"):
-                    SleepAndReset()
-                time.sleep(2)
+        receiveAndPrintValue()
+        time.sleep(.5)
+        for t in timeCounter(1200):
+            seeIfMoveWasMade()
+            print("Seen if movewasmade, sleep 2 secs.")
+            if keyboard.is_pressed("p"):
+                sleepAndReset()
+            time.sleep(2)
 
 def RunProgramme() :
     #Start Web
@@ -194,9 +194,8 @@ def RunProgramme() :
     driver.maximize_window()
 
     # check input for 20 min
-    for t in time_counter(1200):
+    for t in timeCounter(1200):
         checkInput()
-        #print(t)
         time.sleep(.001)
 
 if __name__ == "__main__":
