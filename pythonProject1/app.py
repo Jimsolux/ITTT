@@ -1,8 +1,9 @@
 import time
 import re
+import serial # Arduino Reference
+import keyboard
+
 from selenium import webdriver
-import codecs
-import string
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -10,20 +11,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 
-import serial # Arduino Reference
-#import pyserial
-
-import sys
-import signal
-import keyboard
-
 #Selenium estabishment - driver is used, browser is unused.
 browser = webdriver.Chrome()
-
 cService = webdriver.ChromeService(executable_path="C:/Users/jimco/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe")
 driver = webdriver.Chrome(service = cService)
+
 fakeValue = 0
 oldFinalAnswer = 0
+oldAmountOfMoves = 0 #Establish that 0 moves have been made initially, before it checks.
+arduinoData = serial.Serial('com6', 9600) #opens comport
+
 
 def SendValueToArduino(value) :
     time.sleep(1) # waits 1 second to establish comport connect.
@@ -53,8 +50,6 @@ def ChangeValueToState(value) :
 
     SendValueToArduino(hitIndex)
 
-
-
 def time_counter(seconds):
     starttime = time.time()
     while True:
@@ -67,8 +62,6 @@ def time_counter(seconds):
         kb()
         time.sleep(.001)
 
-
-oldAmountOfMoves = 0 #Establish that 0 moves have been made initially, before it checks.
 def SeeIfMoveWasMade():
     global oldAmountOfMoves
     html = driver.page_source
@@ -85,7 +78,6 @@ def Find_All(a_str, sub):
     subs = [m.start() for m in re.finditer(sub, a_str)]
     total = len(subs)
     return total
-
 
 def ReceiveAndPrintValue() :
     htmlString = driver.page_source #Source string, entire webpage
@@ -152,7 +144,6 @@ def ReceiveAndPrintValue() :
         answerStringPos = "0" #resets pos
         #End Negative Reading of value
 
-
 def ArduinoTestInput() :
     global fakeValue
     print("Testing Arduino with fake input")
@@ -210,18 +201,7 @@ def RunProgramme() :
         #print(t)
         time.sleep(.001)
 
+if __name__ == "__main__":
+    RunProgramme()
+    print("Ending programme")
 
-# Actual run commands -----------------------------------------
-
-# CONTACT WITH COMPORT - CONNECTION ESTABLISHED WITH ARDUINO
-#arduinoData = serial.Serial('com6', 9600)
-
-#arduinoData.open()
-    arduinoData = serial.Serial('com6', 9600) #opens comport
-
-# ---------
-RunProgramme()
-
-print("Ending programme")
-# --------------------
-# End run
