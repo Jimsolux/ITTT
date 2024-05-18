@@ -22,7 +22,7 @@ oldAmountOfMoves = 0 #Establish that 0 moves have been made initially, before it
 arduinoData = serial.Serial('com6', 9600) #opens comport
 
 
-def SendValueToArduino(value) :
+def sendValueToArduino(value) :
     time.sleep(1) # waits 1 second to establish comport connect.
     #print(str(value) + " is my float input value. (arduinosendfunction)")
     cmd = value
@@ -31,9 +31,7 @@ def SendValueToArduino(value) :
     print(cmd)
     arduinoData.write(cmd.encode())
 
-    #arduinoData.close()
-
-def ChangeValueToState(value) :
+def changeValueToState(value) :
     hitIndex = 0
     if value >= 0:
         hitIndex = 0    # No hit
@@ -50,7 +48,7 @@ def ChangeValueToState(value) :
 
     SendValueToArduino(hitIndex)
 
-def time_counter(seconds):
+def timeCounter(seconds):
     starttime = time.time()
     while True:
         now = time.time()
@@ -62,7 +60,7 @@ def time_counter(seconds):
         kb()
         time.sleep(.001)
 
-def SeeIfMoveWasMade():
+def seeIfMoveWasMade():
     global oldAmountOfMoves
     html = driver.page_source
     preString = 'data-whole-move-number='
@@ -74,12 +72,12 @@ def SeeIfMoveWasMade():
         ReceiveAndPrintValue()
         oldAmountOfMoves = amountOfIndexes
 
-def Find_All(a_str, sub):
+def findAll(a_str, sub):
     subs = [m.start() for m in re.finditer(sub, a_str)]
     total = len(subs)
     return total
 
-def ReceiveAndPrintValue() :
+def receiveAndPrintValue() :
     htmlString = driver.page_source #Source string, entire webpage
     preString = '<span class="evaluation-bar-score evaluation-bar-dark ">' #Pre String to be sought
     preStringNeg = '<span class="evaluation-bar-score evaluation-bar-light ">' #Pre String if value turns negative
@@ -144,13 +142,13 @@ def ReceiveAndPrintValue() :
         answerStringPos = "0" #resets pos
         #End Negative Reading of value
 
-def ArduinoTestInput() :
+def arduinoTestInput() :
     global fakeValue
     print("Testing Arduino with fake input")
     SendValueToArduino(fakeValue)
     fakeValue += 1
 
-def SleepAndReset():
+def sleepAndReset():
     global oldFinalAnswer
     global oldAmountOfMoves
     oldAmountOfMoves= 0
@@ -158,7 +156,7 @@ def SleepAndReset():
     oldFinalAnswer = 0
     time.sleep(30)
 
-def PrintFinalValue(posScore, negScore):
+def printFinalValue(posScore, negScore):
     FinalAnswer = 0.0
     global oldFinalAnswer
     try :
