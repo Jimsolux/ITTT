@@ -2,10 +2,10 @@
 
 String myCmd;
 Servo myservo;  // create servo object to control a servo
-int startpos = 0;
+int startpos = 1;
 int endpos = 100;
 int pos = startpos;    // variable to store the servo position
-
+int format = 1;
 
 /**
  * blink amt_of_blinks times
@@ -45,9 +45,12 @@ void hammerfall()
 void setup() {
   myservo.attach(9);               // attaches the servo on pin 9 to the servo object
   Serial.begin(9600);              // Listens on com-port
+  Serial.setTimeout(10); 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);  // Turns the test LED off initially.
   blink(5);                        // let us know it's set up
+  myservo.write(endpos);
+  hammerfall();
 }
 
 /**
@@ -56,13 +59,15 @@ void setup() {
 */
 void loop() {
   if (Serial.available() > 0) { //Check values of Comport serial
+    myCmd = Serial.readString();
     float arduinoValue = myCmd.toFloat();
-    Serial.println(myCmd); // send back confirmation over usb
-    if(myCmd < 0) { // negative rating on move
+    Serial.println(arduinoValue, format); // send back confirmation over usb
+    Serial.flush();
+
+    if(arduinoValue < 0) { // negative rating on move
       blink(2); // blink twice
       hammerfall();
     } 
-    Serial.flush();
   }
 } // End loop 
 
