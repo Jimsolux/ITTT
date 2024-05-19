@@ -1,7 +1,7 @@
 import time
 import re
 import serial # Arduino Reference
-import keyboard
+# import keyboard
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -11,56 +11,29 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 
+import ChessdotcomParser.ChessdotcomParser as ChessdotcomParser
+import ArduinoComms.ArduinoComm as ArduinoComm
+
 #Selenium estabishment - driver is used, browser is unused.
 browser = webdriver.Chrome()
 cService = webdriver.ChromeService(executable_path="C:/Users/jimco/Downloads/chromedriver-win64/chromedriver-win64/chromedriver.exe")
 driver = webdriver.Chrome(service = cService)
 
+chessParser = ChessdotcomParser.ChessdotcomParser()
+arduino = ArduinoComm.ArduinoComm()
+
 fakeValue = 0
 oldFinalAnswer = 0
 oldAmountOfMoves = 0 #Establish that 0 moves have been made initially, before it checks.
-arduinoData = serial.Serial('com6', 9600) #opens comport
+old_move_score = 0
 
 
 
 
-def sendValueToArduino(value) :
-    time.sleep(1) # waits 1 second to establish comport connect.
-    #print(str(value) + " is my float input value. (arduinosendfunction)")
-    cmd = value
-    cmd = str(cmd)
-    cmd = cmd + '\r'
-    print(cmd)
-    arduinoData.write(cmd.encode())
-
-def changeValueToState(value) :
-    hitIndex = 0
-    if value >= 0:
-        hitIndex = 0    # No hit
-    elif value < 0 and value > -2:
-        hitIndex = 1    # Hit 1
-    elif value <= -2 and value > -4:
-        hitIndex = 2    # Hit 2
-    elif value <= -4 and value > -8:
-        hitIndex = 3    # hit 3
-    elif value <= -8 and value > -12:
-        hitIndex = 4    # hit 4
-    elif value <= -12:
-        hitIndex = 5    # hit 5
-
-    sendValueToArduino(hitIndex)
-
-def timeCounter(seconds):
-    starttime = time.time()
-    while True:
-        now = time.time()
-        if now > starttime + seconds:
-            break
-        yield now - starttime
-
-    for t in timeCounter(20):
-        kb()
-        time.sleep(.001)
+def findAll(a_str, sub):
+    subs = [m.start() for m in re.finditer(sub, a_str)]
+    total = len(subs)
+    return total
 
 def seeIfMoveWasMade():
     global oldAmountOfMoves
@@ -73,11 +46,6 @@ def seeIfMoveWasMade():
         time.sleep(1)
         receiveAndPrintValue()
         oldAmountOfMoves = amountOfIndexes
-
-def findAll(a_str, sub):
-    subs = [m.start() for m in re.finditer(sub, a_str)]
-    total = len(subs)
-    return total
 
 def receiveAndPrintValue() :
     htmlString = driver.page_source #Source string, entire webpage
@@ -144,10 +112,20 @@ def receiveAndPrintValue() :
         answerStringPos = "0" #resets pos
         #End Negative Reading of value
 
+def receiveAndPrintValue2():
+    htmlString = driver.page_source #Source string, entire webpage
+    chessParser.find_move_score = True
+    chessParser.feed(htmlString)
+    chessParser.reset()
+    if(chessParser.found_move_score):
+        move_score = chessParser.move_scores[-1]
+        chessParser.found_move_score = False
+    pass
+
 def arduinoTestInput() :
     global fakeValue
     print("Testing Arduino with fake input")
-    sendValueToArduino(fakeValue)
+    arduino.write_read(fakeValue)
     fakeValue += 1
 
 def sleepAndReset():
@@ -157,6 +135,19 @@ def sleepAndReset():
     print("Sleeping... For 1 minute!")
     oldFinalAnswer = 0
     time.sleep(30)
+
+def timeCounter(seconds):
+    starttime = time.time()
+    while True:
+        now = time.time()
+        if now > starttime + seconds:
+            break
+        yield now - starttime
+
+    for t in timeCounter(20):
+        kb()
+        time.sleep(.001)
+
 
 def printFinalValue(posScore, negScore):
     FinalAnswer = 0.0
@@ -170,16 +161,26 @@ def printFinalValue(posScore, negScore):
             if FinalAnswer < oldFinalAnswer :   # only sends negative values under -2
                 print("Final Answer Below")
                 str(FinalAnswer)
-                #ChangeValueToState(FinalAnswer)
-                sendValueToArduino(FinalAnswer)
+                arduino.write_read(FinalAnswer)
         oldFinalAnswer = FinalAnswer # stores old final answer
     except Exception as error:
         print("Empty Final Answer recorded")
+
+
+'''
+minimal version of print final value, using the new parser and arduino comms
+'''
+def printFinalValue2(move_score):
+    if(move_score != old_move_score):
+        arduino.write_read(move_score)
+        old_move_score = move_score
+
 
 def RunProgramme() :
     #Start Web
     driver.get('https://www.chess.com/')
     driver.maximize_window()
+
     if keyboard.is_pressed("q"):
         debug_mode = True
     elif keyboard.is_pressed("p"): #Starts Reading out the values and sending it away.
@@ -199,6 +200,9 @@ def RunProgramme() :
             if keyboard.is_pressed("p"):
                 sleepAndReset()
             time.sleep(2)
+
+
+
 
 
 if __name__ == "__main__":
