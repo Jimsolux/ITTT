@@ -22,6 +22,8 @@ oldAmountOfMoves = 0 #Establish that 0 moves have been made initially, before it
 arduinoData = serial.Serial('com6', 9600) #opens comport
 
 
+
+
 def sendValueToArduino(value) :
     time.sleep(1) # waits 1 second to establish comport connect.
     #print(str(value) + " is my float input value. (arduinosendfunction)")
@@ -174,29 +176,30 @@ def printFinalValue(posScore, negScore):
     except Exception as error:
         print("Empty Final Answer recorded")
 
-def checkInput():
+def RunProgramme() :
+    #Start Web
+    driver.get('https://www.chess.com/')
+    driver.maximize_window()
     if keyboard.is_pressed("q"):
-        arduinoTestInput()
-        time.sleep(.5)
-    if keyboard.is_pressed("p"): #Starts Reading out the values and sending it away.
-        receiveAndPrintValue()
-        time.sleep(.5)
-        for t in timeCounter(1200):
+        debug_mode = True
+    elif keyboard.is_pressed("p"): #Starts Reading out the values and sending it away.
+        debug_mode = False
+
+
+    # check input for 20 min
+    for t in timeCounter(1200):
+        if debug_mode: 
+            arduinoTestInput()
+            time.sleep(.5)
+        else:
+            receiveAndPrintValue()
+            time.sleep(.5)
             seeIfMoveWasMade()
             print("Seen if movewasmade, sleep 2 secs.")
             if keyboard.is_pressed("p"):
                 sleepAndReset()
             time.sleep(2)
 
-def RunProgramme() :
-    #Start Web
-    driver.get('https://www.chess.com/')
-    driver.maximize_window()
-
-    # check input for 20 min
-    for t in timeCounter(1200):
-        checkInput()
-        time.sleep(.001)
 
 if __name__ == "__main__":
     RunProgramme()
